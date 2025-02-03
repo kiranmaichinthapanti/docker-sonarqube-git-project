@@ -1,18 +1,21 @@
 pipeline {
-agent any
+agent {
+node{
+label 'slave'
+}
+}
 stages {
     stage('build') {
         steps {
-           sh 'cd && git clone https://github.com/muralialakuntla3/lms-app.git'
-           sh 'cd ~/lms-app/webapp && npm install && npm run build'
+           
+           sh 'cd webapp && npm install && npm run build'
       }
     }
     stage('nexus') {
         steps {
-           sh 'cd ~/lms-app/webapp'
            sh 'zip -r lms-v1.1.zip webapp/dist/*'
            sh 'pwd'
-           sh 'curl -v -u admin:admin123 --upload-file lms-v1.1.zip http://54.241.143.6:8081/repository/lms/'
+           sh 'curl -v -u admin:admin123 --upload-file lms-v1.1.zip http://18.144.90.12/:8081/repository/lms/'
       }
     }
   }
