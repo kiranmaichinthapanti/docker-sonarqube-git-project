@@ -3,7 +3,16 @@ agent any
 stages {
     stage('remove old container') {
         steps {
-           sh 'docker container rm -f frontend'
+            script{
+                def containerName = "frontend"
+                def checkContainer = sh(script: "docker ps -a --format '{{}.Names}' | grep -w ${containerName}", returnStatus: true)
+                if (checkContainer == 0){
+                    echo "container ${containerName} exists. removing...."
+                    sh "docker container rm -f ${containerName}"
+                } else {
+                    echo "Container ${containerName} does not exist. Skipping removeal..."
+                }
+            }
       }
     }
     stage('Image Build') {
