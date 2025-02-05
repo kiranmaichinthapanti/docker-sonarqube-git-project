@@ -1,0 +1,20 @@
+pipeline {
+agent any 
+stages {
+    stage('Image Build') {
+        steps {
+           sh 'cd api && docker build -t api .'
+      }
+    }
+    stage('Running Container') {
+        steps {
+           sh 'docker container run -dt --name backend --network lmsnetwork -p 3000:3000 api'
+      }
+    }
+    stage('build status') {
+        steps {
+           sh 'echo backend deployed'
+      }
+    }
+  }
+}
