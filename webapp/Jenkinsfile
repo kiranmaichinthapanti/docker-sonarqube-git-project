@@ -1,6 +1,11 @@
 pipeline {
 agent any 
 stages {
+    stage('remove old container') {
+        steps {
+           sh 'docker container rm -f frontend'
+      }
+    }
     stage('Image Build') {
         steps {
            sh 'cd webapp && docker build -t web .'
