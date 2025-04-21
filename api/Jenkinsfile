@@ -6,6 +6,7 @@ pipeline {
      }
     environment {
         dockerhub = credentials('dockerhub')
+        deployBranch= 'Jenkins-Docker'
         SONARQUBE_URL = 'http://54.67.11.240:9000'  // Your SonarQube URL
         SONARQUBE_TOKEN = credentials('sonar')  // Replace with your Jenkins credential ID
     }
@@ -26,6 +27,30 @@ pipeline {
                         -Dsonar.sources=. \
                         -Dsonar.host.url=${SONARQUBE_URL} \
                         -Dsonar.login=${SONARQUBE_TOKEN}
+                        """
+                    }
+                }
+            }
+        }
+        stage('Approval') {
+            steps {
+                script {
+                    def Delay = input id: 'Deploy',
+                        message: sh(script: '''echo "You are DEPLOYING -->$deployBranch<-- IN PRODUCTION"''', returnStdout: true).trim(),
+                        submitter: 'uaserID1, userID2',
+                        parameters: [
+                            [$class: 'ChoiceParameterDefinition',
+                                choices: ['no', 'yes'].join('\n'),
+                                name: 'input',
+                                description: 'Please Select "YES" to Build or "NO" to Abort']
+                        ]
+                    echo "The answer is: ${Delay}"
+                    if ("${Delay}" == "yes") {
+                        sh '''echo "Deploying in prod"'''
+                    } else {
+                        sh """
+                        echo "exiting not production ready branch"
+                        exit 1
                         """
                     }
                 }
