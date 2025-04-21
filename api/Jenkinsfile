@@ -30,9 +30,41 @@ pipeline {
                 }
             }
         }
+        stage('Remove Old Container'){
+            steps{
+              sh 'docker container rm -f api'
+             }
+          }
+        stage('Build'){
+            steps{
+              sh 'cd api && docker build -t muralialakuntla3/api .'
+             }
+          }
+        stage('Scanning'){
+            steps{
+              sh 'trivy image muralialakuntla3/api'
+             }
+          }
+        stage('Docker Login'){
+            steps{
+                withCredentials([usernameColonPassword(credentialsId: 'dockerhub', variable: 'dockerhub')]) {
+                    sh 'docker push muralialakuntla3/api'
+                }
+             }
+          }
+        stage('Remove Image'){
+            steps{
+              sh 'docker rmi muralialakuntla3/api'
+             }
+          }
+        stage('Run Container'){
+            steps{
+              sh 'docker container run -dt --name api --network lmsnetwork -p 3000:3000 muralialakuntla3/api'
+             }
+          }
         stage('Email Notification') {
               steps {
-                  emailext body: 'LMS Backend application deployed successfully into Prod Environment', subject: 'Ecomm Deployment', to: 'murali@digitaledify.ai'
+                  emailext body: 'LMS Backend application deployed successfully into Prod Environment', subject: 'LMS Backend Deployment', to: 'murali@digitaledify.ai'
                   }
               }
         stage('Post-Build Cleanup') {
