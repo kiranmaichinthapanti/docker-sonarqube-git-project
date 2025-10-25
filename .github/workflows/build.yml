@@ -1,4 +1,4 @@
-name: Build
+name: Build & Deploy
 on: workflow_dispatch
 jobs:
   approval:
@@ -25,7 +25,62 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-  # database:
-  #   needs: approval
-  #   runs-on: self-hosted 
+  database:
+    needs: approval
+    runs-on: self-hosted 
+    steps:
+      - name: Create Docker Network
+        run: docker network create lmsnetwork
+      - name: Create Database
+        run: docker container run -dt --name lmsdb -p 5432:5432 --network lmsnetwork -e POSTGRES_PASSWORD=admin123 postgres
+  backend:
+    needs:
+      - sonar
+      - database
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5.0.0
+      - name: Build Docker Image
+        run: |
+          cd api
+          docker build -t api .
+      - name: Run Container
+        run: docker container run -dt --name api -p 3000:3000 --network lmsnetwork -e DATABASE_URL=postgresql://postgres:admin123@lmsdb:5432/postgres -e PORT=3000 -e MODE=local  murali1108/lms-api
+  frontend:
+    needs:
+      - sonar
+      - backend
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5.0.0
+      - name: Build Docker Image
+        run: |
+          cd webapp
+          docker build -t webapp .
+      - name: Run Container
+        run: docker container run -dt --name web --network lmsnetwork -p 80:80 webapp
+      - name: List Containers
+        run: docker container ls
+  feedback:
+    needs:
+      - database
+      - backend
+      - frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send notification to slack
+        uses: slackapi/slack-github-action@v2.1.1
+        with:
+          webhook: ${{secrets.SLACK_WEBHOOK_URL}}
+          webhook-type: incoming-webhook
+          payload: |
+            channel: github-actions
+            text: "LMS production deployment Completed"
+        
+    
+  
+    
+      
     
