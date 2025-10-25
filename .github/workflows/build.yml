@@ -1,7 +1,21 @@
 name: Build
 on: workflow_dispatch
 jobs:
+  approval:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    steps:
+      - name: Send notification to slack
+        uses: slackapi/slack-github-action@v2.1.1
+        with:
+          webhook: ${{secrets.SLACK_WEBHOOK_URL}}
+          webhook-type: incoming-webhook
+          payload: |
+            channel: github-actions
+            test: "LMS production deployment started Please do Approve it"    
   sonar:
+    needs: approval
     runs-on: ubuntu-latest 
     steps:
       - uses: actions/checkout@v4
@@ -11,3 +25,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+  # database:
+  #   needs: approval
+  #   runs-on: self-hosted 
+    
