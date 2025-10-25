@@ -30,7 +30,7 @@ jobs:
     runs-on: self-hosted 
     steps:
       - name: Create Database
-        run: 
+        run: |
           docker container rm -f lmsdb
           docker container run -dt --name lmsdb -p 5432:5432 --network lmsnetwork -e POSTGRES_PASSWORD=admin123 postgres
   backend:
