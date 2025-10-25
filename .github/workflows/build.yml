@@ -46,7 +46,7 @@ jobs:
           cd api
           docker build -t api .
       - name: Run Container
-        run: docker container run -dt --name api -p 3000:3000 --network lmsnetwork -e DATABASE_URL=postgresql://postgres:admin123@lmsdb:5432/postgres -e PORT=3000 -e MODE=local  murali1108/lms-api
+        run: docker container run -dt --name api -p 3000:3000 --network lmsnetwork -e DATABASE_URL=postgresql://postgres:admin123@lmsdb:5432/postgres -e PORT=3000 -e MODE=local api
   frontend:
     needs:
       - sonar
