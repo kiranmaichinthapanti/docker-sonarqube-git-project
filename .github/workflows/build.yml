@@ -29,10 +29,10 @@ jobs:
     needs: approval
     runs-on: self-hosted 
     steps:
-      - name: Create Docker Network
-        run: docker network create lmsnetwork
       - name: Create Database
-        run: docker container run -dt --name lmsdb -p 5432:5432 --network lmsnetwork -e POSTGRES_PASSWORD=admin123 postgres
+        run: 
+          docker container rm -f lmsdb
+          docker container run -dt --name lmsdb -p 5432:5432 --network lmsnetwork -e POSTGRES_PASSWORD=admin123 postgres
   backend:
     needs:
       - sonar
@@ -41,6 +41,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5.0.0
+      - name: Remove OLD Deployment
+        run: |
+          docker container rm -f api
+          docker rmi api
       - name: Build Docker Image
         run: |
           cd api
@@ -55,6 +59,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5.0.0
+      - name: Remove OLD Deployment
+        run:
+          docker container rm -f web
+          docker rmi webapp
       - name: Build Docker Image
         run: |
           cd webapp
